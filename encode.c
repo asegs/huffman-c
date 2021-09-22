@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 const int charSetSize = 256;
+const int bufferSize = 64;
 
 struct ScoredNode {
     char letter;
@@ -56,36 +57,35 @@ void quicksort(struct ScoredNode nodes[charSetSize],int low, int high){
     }
 }
 
-void readFromFile(char * filename){
-
+void readFileToArray(char * filename,struct ScoredNode toFeed[charSetSize]){
+    FILE *fp;
+    fp = fopen(filename,"r");
+    if (fp == NULL) {
+        printf("File not found.\n");
+        return;
+    }
+    char buffer[bufferSize];
+    size_t bytesRead = bufferSize;
+    while (bytesRead == bufferSize){
+        bytesRead = fread(buffer,bufferSize,bufferSize,fp);
+        for (int i = 0;i<bufferSize;i++){
+            if (buffer[i] == EOF){
+                //could return
+                break;
+            }
+            toFeed[buffer[i]].timesUsed++;
+        }
+    }
 }
 
 
 int main(){
     struct ScoredNode lst [charSetSize];
     initializeArrayWithEmptyNodes(lst);
-    struct ScoredNode a;
-    a.timesUsed = 13;
-    a.letter = 'a';
-    lst[0] = a;
-    struct ScoredNode b;
-    b.timesUsed = 4;
-    b.letter = 'b';
-    lst[1] = b;
-    struct ScoredNode c;
-    c.timesUsed = 6;
-    c.letter = 'c';
-    lst[2] = c;
-    struct ScoredNode d;
-    d.timesUsed = 9;
-    d.letter = 'd';
-    lst[3] = d;
-    struct ScoredNode e;
-    e.timesUsed = 21;
-    e.letter = 'e';
-    lst[4] = e;
-    quicksort(lst,0,charSetSize - 1);
+    readFileToArray("sample.txt",lst);
+    quicksort(lst,0,charSetSize-1);
     printScoresNodesArray(lst);
+
     return 1;
 }
 
