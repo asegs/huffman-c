@@ -15,6 +15,16 @@ struct ScoredNode {
     struct ScoredNode * right;
 };
 
+struct ScoredNode *  copyAndFree(struct ScoredNode toCopy){
+    struct ScoredNode * newNode = malloc(sizeof (struct ScoredNode));
+    newNode->timesUsed = toCopy.timesUsed;
+    newNode->letter = toCopy.letter;
+    newNode->left = toCopy.left;
+    newNode->right = toCopy.right;
+    free(&toCopy);
+    return newNode;
+}
+
 void initializeArrayWithEmptyNodes(struct ScoredNode nodes[charSetSize]){
     for (int i = 0;i<charSetSize;i++){
         struct ScoredNode temp;
@@ -76,6 +86,7 @@ int partition(struct ScoredNode nodes[charSetSize],int low, int high){
     return (i + 1);
 }
 
+//only sort after empties have been eliminated
 void quicksort(struct ScoredNode nodes[charSetSize],int low, int high){
     if (low < high) {
         int pi = partition(nodes,low,high);
@@ -84,7 +95,6 @@ void quicksort(struct ScoredNode nodes[charSetSize],int low, int high){
     }
 }
 
-//issues with low buffer sizes, doesn't loop around
 void readFileToArray(char * filename,struct ScoredNode toFeed[charSetSize]){
     FILE *fp;
     fp = fopen(filename,"r");
@@ -98,6 +108,18 @@ void readFileToArray(char * filename,struct ScoredNode toFeed[charSetSize]){
         bytesRead = fread(buffer,1,bufferSize,fp);
         for (int i = 0;i<bytesRead;i++){
             toFeed[buffer[i]].timesUsed++;
+        }
+    }
+}
+
+
+void insertAtIndex(struct ScoredNode * nodes,struct ScoredNode * toInsert,int idx,int nodesSize,struct ScoredNode * newLst){
+    int foundIt = 0;
+    for (int i = 0;i<nodesSize;i++){
+        newLst[i + foundIt] = nodes[i + 2];
+        if (i == idx){
+            newLst[i + 1] = *toInsert;
+            foundIt ++;
         }
     }
 }
@@ -120,8 +142,15 @@ int highestIndexLessThan(struct ScoredNode * nodes,int lower,int upper,int curre
     return highestIndexLessThan(nodes,lower,upper,currentGreatest,greatestIdx,nodeTimesUsed);
 }
 
-void insertLastTwoNodes(struct ScoredNode * nodes, int size){
-
+struct ScoredNode *  insertLastTwoNodes(struct ScoredNode * nodes, int size){
+    struct ScoredNode * new = malloc(sizeof (struct ScoredNode));
+    new->timesUsed = nodes[0].timesUsed + nodes[1].timesUsed;
+    new->left = &nodes[0];
+    new->right = &nodes[1];
+    struct ScoredNode * newNodes = malloc(size * sizeof(struct ScoredNode) - 1);
+    int insertIdx = highestIndexLessThan(nodes,0,size,0,0,new->timesUsed);
+    insertAtIndex(nodes,new,insertIdx,size,newNodes);
+    return newNodes;
 }
 
 struct ScoredNode * buildTree(struct ScoredNode * nodes,int size){
@@ -132,6 +161,8 @@ struct ScoredNode * buildTree(struct ScoredNode * nodes,int size){
     if (size == 1){
         return &nodes[0];
     }
+    size --;
+    return buildTree(insertLastTwoNodes(nodes,size),size);
 
 
 }
@@ -146,6 +177,7 @@ int main(){
     struct ScoredNode uniqueLst [uniqueLetterCount];
     feedUniqueLetters(lst,uniqueLst,uniqueLetterCount);
     printScoresNodesArrayVar(uniqueLst,uniqueLetterCount);
+    buildTree(uniqueLst,uniqueLetterCount);
 
     return 1;
 }
