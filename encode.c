@@ -36,6 +36,7 @@ int getUniqueLetterCount(struct ScoredNode nodes[charSetSize]){
     return count;
 }
 
+//doesn't wipe old nodes memory, if it does, take care to deep copy nodes
 void feedUniqueLetters(struct ScoredNode nodes[charSetSize],struct ScoredNode * toFeed,int feedSize){
     for (int i = 0;i<feedSize;i++){
         toFeed[feedSize - i - 1] = nodes[charSetSize - i - 1];
@@ -99,6 +100,40 @@ void readFileToArray(char * filename,struct ScoredNode toFeed[charSetSize]){
             toFeed[buffer[i]].timesUsed++;
         }
     }
+}
+
+int highestIndexLessThan(struct ScoredNode * nodes,int lower,int upper,int currentGreatest,int greatestIdx, int nodeTimesUsed){
+    if ((upper - lower <= 1) || nodes[lower].timesUsed > nodeTimesUsed){
+        return greatestIdx + 1;
+    }
+    int mid = (upper - lower)/2 + lower;
+    int val = nodes[mid].timesUsed;
+    if (val <= nodeTimesUsed){
+        if (val > currentGreatest){
+            currentGreatest = val;
+            greatestIdx = mid;
+        }
+        lower = mid;
+    }else{
+        upper = mid;
+    }
+    return highestIndexLessThan(nodes,lower,upper,currentGreatest,greatestIdx,nodeTimesUsed);
+}
+
+void insertLastTwoNodes(struct ScoredNode * nodes, int size){
+
+}
+
+struct ScoredNode * buildTree(struct ScoredNode * nodes,int size){
+    if (size == 0){
+        struct ScoredNode * empty = malloc(sizeof (struct ScoredNode));
+        return empty;
+    }
+    if (size == 1){
+        return &nodes[0];
+    }
+
+
 }
 
 
