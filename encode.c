@@ -6,11 +6,13 @@
 #include <stdlib.h>
 
 const int charSetSize = 256;
-const int bufferSize = 64;
+const int bufferSize = 3;
 
 struct ScoredNode {
     char letter;
     int timesUsed;
+    struct ScoredNode * left;
+    struct ScoredNode * right;
 };
 
 void initializeArrayWithEmptyNodes(struct ScoredNode nodes[charSetSize]){
@@ -22,8 +24,32 @@ void initializeArrayWithEmptyNodes(struct ScoredNode nodes[charSetSize]){
     }
 }
 
+int getUniqueLetterCount(struct ScoredNode nodes[charSetSize]){
+    int count = 0;
+    for (int i = charSetSize - 1;i>=0;i--){
+        if (nodes[i].timesUsed > 0){
+            count++;
+        }else{
+            break;
+        }
+    }
+    return count;
+}
+
+void feedUniqueLetters(struct ScoredNode nodes[charSetSize],struct ScoredNode * toFeed,int feedSize){
+    for (int i = 0;i<feedSize;i++){
+        toFeed[feedSize - i - 1] = nodes[charSetSize - i - 1];
+    }
+}
+
 void printScoresNodesArray(struct ScoredNode nodes[charSetSize]){
     for (int i = 0;i<charSetSize;i++){
+        printf("character: %c, occurrences: %d\n",nodes[i].letter,nodes[i].timesUsed);
+    }
+}
+
+void printScoresNodesArrayVar(struct ScoredNode * nodes, int size){
+    for (int i = 0;i<size;i++){
         printf("character: %c, occurrences: %d\n",nodes[i].letter,nodes[i].timesUsed);
     }
 }
@@ -57,6 +83,7 @@ void quicksort(struct ScoredNode nodes[charSetSize],int low, int high){
     }
 }
 
+//issues with low buffer sizes, doesn't loop around
 void readFileToArray(char * filename,struct ScoredNode toFeed[charSetSize]){
     FILE *fp;
     fp = fopen(filename,"r");
@@ -67,12 +94,8 @@ void readFileToArray(char * filename,struct ScoredNode toFeed[charSetSize]){
     char buffer[bufferSize];
     size_t bytesRead = bufferSize;
     while (bytesRead == bufferSize){
-        bytesRead = fread(buffer,bufferSize,bufferSize,fp);
-        for (int i = 0;i<bufferSize;i++){
-            if (buffer[i] == EOF){
-                //could return
-                break;
-            }
+        bytesRead = fread(buffer,1,bufferSize,fp);
+        for (int i = 0;i<bytesRead;i++){
             toFeed[buffer[i]].timesUsed++;
         }
     }
@@ -84,7 +107,10 @@ int main(){
     initializeArrayWithEmptyNodes(lst);
     readFileToArray("sample.txt",lst);
     quicksort(lst,0,charSetSize-1);
-    printScoresNodesArray(lst);
+    int uniqueLetterCount = getUniqueLetterCount(lst);
+    struct ScoredNode uniqueLst [uniqueLetterCount];
+    feedUniqueLetters(lst,uniqueLst,uniqueLetterCount);
+    printScoresNodesArrayVar(uniqueLst,uniqueLetterCount);
 
     return 1;
 }
